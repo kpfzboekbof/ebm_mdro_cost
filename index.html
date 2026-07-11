@@ -85,6 +85,13 @@
   details.tpguide .gdl dt{font-weight:700;color:var(--ink);margin-top:10px;font-size:12.5px;}
   details.tpguide .gdl dt:first-child{margin-top:0;}
   details.tpguide .gdl dd{margin:3px 0 0;line-height:1.6;}
+  .exrow{display:grid;grid-template-columns:1fr 260px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);}
+  .exrow:last-child{border-bottom:none;}
+  .exlab{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;}
+  .exlab input{width:auto;padding:0;}
+  .exlab small{display:block;color:var(--muted);font-size:11px;margin-left:2px;}
+  .exval{font-size:12.5px;color:var(--muted);text-align:right;}
+  .exval .exsave{color:var(--accent);font-weight:700;}
   footer{max-width:1240px;margin:8px auto 30px;padding:0 20px;font-size:11.5px;color:var(--muted);}
 </style>
 </head>
@@ -101,10 +108,18 @@
     <p class="hint">數字為示意值，請覆蓋為貴院實際資料。改任一格即重新模擬。</p>
 
     <div class="group">
-      <h3>病人數與流量</h3>
-      <div class="field"><label>年帶菌住院病人數<small>一年內「住院期間新篩出」抗藥菌並須隔離之住院人數（不含入院時已知帶菌者）</small></label>
-        <div class="inbox"><input id="N" type="number" min="0" value="300"><span class="unit">人/年</span></div></div>
-      <div class="field"><label>ICU 帶菌轉出人數<small>ICU 帶菌轉出普通病房、須隔離床者</small></label>
+      <h3>病人數與流量（依菌種分類）</h3>
+      <p class="hint" style="margin:-4px 0 8px">不同菌種之隔離政策、篩檢與清消規範可能不同，故年帶菌住院病人數依菌種分開輸入；四項合計即為模型使用之年帶菌住院人數。</p>
+      <div class="field"><label>MRSA + VRE<small>一年內「住院期間新篩出」人數（不含入院時已知帶菌者）</small></label>
+        <div class="inbox"><input id="N_mrsa_vre" type="number" min="0" value="150"><span class="unit">人/年</span></div></div>
+      <div class="field"><label>CRE<small>碳青黴烯類抗藥腸桿菌</small></label>
+        <div class="inbox"><input id="N_cre" type="number" min="0" value="70"><span class="unit">人/年</span></div></div>
+      <div class="field"><label>ESBL<small>廣效性乙內醯胺酶腸桿菌</small></label>
+        <div class="inbox"><input id="N_esbl" type="number" min="0" value="50"><span class="unit">人/年</span></div></div>
+      <div class="field"><label>C. diff<small>困難梭菌</small></label>
+        <div class="inbox"><input id="N_cdiff" type="number" min="0" value="30"><span class="unit">人/年</span></div></div>
+      <div class="roomcalc" id="ntotal">合計年帶菌住院病人數：—</div>
+      <div class="field" style="margin-top:9px"><label>ICU 帶菌轉出人數<small>ICU 帶菌轉出普通病房、須隔離床者（未依菌種拆分）</small></label>
         <div class="inbox"><input id="Nicu" type="number" min="0" value="50"><span class="unit">人/年</span></div></div>
     </div>
 
@@ -218,6 +233,20 @@
   </div>
 </div>
 
+<div class="wrap" style="grid-template-columns:1fr;margin-top:0">
+  <div class="card">
+    <h2>③ Interactive：豁免特定菌種隔離政策可省下多少錢</h2>
+    <p class="hint">勾選欲豁免隔離政策之菌種，即時試算可能節省之年度成本。估算法：以目前模擬之「平均每人非ICU隔離相關成本」×該菌種年人數；ICU 轉出延遲成本未依菌種拆分，故豁免不影響此項。</p>
+    <div id="exemptList"></div>
+    <div class="total" style="margin-top:14px">
+      <div class="lbl">豁免所選菌種後，預估年度總成本（平均值）</div>
+      <div class="val" id="exemptAdjTotal">—</div>
+      <div class="ci">預估可節省：<b id="exemptSavings">—</b></div>
+      <div class="sub" id="exemptSubline">—</div>
+    </div>
+  </div>
+</div>
+
 <footer>
   說明：PSA（probabilistic sensitivity analysis）以機率分布反映參數不確定性，是衛生經濟與 HTA 的標準作法。房型分配的隨機性以多項抽樣建模，故「移到不同房型成本不同」已內含於區間。床位機會成本通常為主導項，反映單室／同菌種同室規則的資源排擠。預設值僅為示意，實際以貴院填入之真實資料為準。
 </footer>
@@ -227,7 +256,15 @@
   const nf=n=>"$"+Math.round(n).toLocaleString("en-US");
   const nfk=n=>"$"+(Math.round(n/1000)).toLocaleString("en-US")+"K";
 
-  const defaults={N:300,Nicu:50,pS:30,pD:45,pT:25,
+  const CATS=[
+    {key:"mrsa_vre",name:"MRSA + VRE"},
+    {key:"cre",name:"CRE（碳青黴烯抗藥腸桿菌）"},
+    {key:"esbl",name:"ESBL（廣效性乙內醯胺酶腸桿菌）"},
+    {key:"cdiff",name:"C. diff（困難梭菌）"},
+  ];
+  const exemptState={mrsa_vre:false,cre:false,esbl:false,cdiff:false};
+
+  const defaults={N_mrsa_vre:150,N_cre:70,N_esbl:50,N_cdiff:30,Nicu:50,pS:30,pD:45,pT:25,
     D_lo:6,D_md:10,D_hi:18,OCC_lo:75,OCC_md:85,OCC_hi:95,
     Rbed_lo:2000,Rbed_md:3000,Rbed_hi:4500,Dicu_lo:0.5,Dicu_md:1.5,Dicu_hi:3,
     Ricu_lo:10000,Ricu_md:15000,Ricu_hi:22000,Cppe_lo:150,Cppe_md:250,Cppe_hi:400,
@@ -254,12 +291,13 @@
     return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v2);}
 
   function readParams(){
-    const N=v("N"),Nicu=v("Nicu");
+    const catN={mrsa_vre:v("N_mrsa_vre"),cre:v("N_cre"),esbl:v("N_esbl"),cdiff:v("N_cdiff")};
+    const N=CATS.reduce((s,c)=>s+catN[c.key],0),Nicu=v("Nicu");
     let pS=v("pS"),pD=v("pD"),pT=v("pT"); let s=pS+pD+pT; if(s<=0){pS=1;s=1;pD=0;pT=0;}
     pS/=s;pD/=s;pT/=s;
     const Bexp=pD*1+pT*2;
     const Evar=(pD*1+pT*4)-Bexp*Bexp; // var of single-patient blocked beds
-    return {N,Nicu,pS,pD,pT,Bexp,Evar,
+    return {N,Nicu,catN,pS,pD,pT,Bexp,Evar,
       D:[v("D_lo"),v("D_md"),v("D_hi")],OCC:[v("OCC_lo"),v("OCC_md"),v("OCC_hi")],
       Rbed:[v("Rbed_lo"),v("Rbed_md"),v("Rbed_hi")],Dicu:[v("Dicu_lo"),v("Dicu_md"),v("Dicu_hi")],
       Ricu:[v("Ricu_lo"),v("Ricu_md"),v("Ricu_hi")],Cppe:[v("Cppe_lo"),v("Cppe_md"),v("Cppe_hi")],
@@ -283,6 +321,7 @@
   function run(){
     const P=readParams();
     document.getElementById("roomcalc").textContent="期望封鎖床數："+P.Bexp.toFixed(2)+" 床/人（單"+Math.round(P.pS*100)+"% 雙"+Math.round(P.pD*100)+"% 三"+Math.round(P.pT*100)+"%）";
+    document.getElementById("ntotal").textContent="合計年帶菌住院病人數："+P.N.toLocaleString("en-US")+" 人/年";
     const ITER=10000;
     const totals=new Float64Array(ITER);
     const sum={ward:0,icu:0,ppe:0,labor:0,clean:0,lab:0};
@@ -358,10 +397,33 @@
     document.getElementById("driver").innerHTML=
       `主導成本為「<b>${top.name}</b>」，占 ${tp.toFixed(1)}%。不確定性最大的參數是「<b>${topTorn.n}</b>」，`+
       `要縮小成本區間、讓估計更可信，應優先向院內取得此參數的真實數據。`;
+
+    renderExempt(P,meanCat,mean);
   }
 
+  // per-patient non-ICU cost = average(ward+ppe+labor+clean+lab) / N；豁免某菌種＝從 N 移除該菌種人數
+  function renderExempt(P,meanCat,mean){
+    const nonIcuMean=meanCat.ward+meanCat.ppe+meanCat.labor+meanCat.clean+meanCat.lab;
+    const perPatient=P.N>0?nonIcuMean/P.N:0;
+    let listHtml="";
+    CATS.forEach(c=>{
+      const n=P.catN[c.key]||0, saving=perPatient*n, checked=exemptState[c.key]?"checked":"";
+      listHtml+=`<div class="exrow">
+        <label class="exlab"><input type="checkbox" id="ex_${c.key}" ${checked} onchange="onExemptToggle('${c.key}')"> ${c.name}<small>${n.toLocaleString("en-US")} 人/年</small></label>
+        <div class="exval">${exemptState[c.key]?`<span class="exsave">已豁免，預估年省 ${nf(saving)}</span>`:`若豁免，預估年省 ${nf(saving)}`}</div>
+      </div>`;
+    });
+    document.getElementById("exemptList").innerHTML=listHtml;
+    const totalSaving=CATS.reduce((s,c)=>s+(exemptState[c.key]?perPatient*(P.catN[c.key]||0):0),0);
+    const adj=mean-totalSaving;
+    document.getElementById("exemptAdjTotal").textContent=nf(adj);
+    document.getElementById("exemptSavings").textContent=nf(totalSaving)+(mean>0?"（"+(totalSaving/mean*100).toFixed(1)+"%）":"");
+    document.getElementById("exemptSubline").textContent="以現行模擬之平均每人非ICU相關隔離成本（"+nf(perPatient)+"／人）估算；ICU 轉出延遲成本未依菌種拆分，不隨勾選變動。";
+  }
+  function onExemptToggle(key){exemptState[key]=document.getElementById("ex_"+key).checked;run();}
+
   const allIds=Object.keys(defaults);
-  function resetAll(){allIds.forEach(id=>document.getElementById(id).value=defaults[id]);run();}
+  function resetAll(){allIds.forEach(id=>document.getElementById(id).value=defaults[id]);CATS.forEach(c=>exemptState[c.key]=false);run();}
   let deb;allIds.forEach(id=>document.getElementById(id).addEventListener("input",()=>{clearTimeout(deb);deb=setTimeout(run,180);}));
   run();
 </script>
