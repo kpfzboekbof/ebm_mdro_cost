@@ -79,6 +79,12 @@
   details summary{cursor:pointer;color:var(--accent);font-weight:600;}
   details .box{background:#fafbfc;border:1px solid var(--line);border-radius:8px;padding:12px;margin-top:8px;}
   details code{display:block;margin:3px 0;color:var(--ink);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;}
+  details.tpguide{margin-top:10px;}
+  details.tpguide .gprin{margin:0 0 10px;line-height:1.6;}
+  details.tpguide .gdl{margin:0;}
+  details.tpguide .gdl dt{font-weight:700;color:var(--ink);margin-top:10px;font-size:12.5px;}
+  details.tpguide .gdl dt:first-child{margin-top:0;}
+  details.tpguide .gdl dd{margin:3px 0 0;line-height:1.6;}
   footer{max-width:1240px;margin:8px auto 30px;padding:0 20px;font-size:11.5px;color:var(--muted);}
 </style>
 </head>
@@ -135,6 +141,22 @@
             <td><input id="T_lo" type="number" value="15"></td><td><input id="T_md" type="number" value="30"></td><td><input id="T_hi" type="number" value="50"></td></tr>
         </tbody>
       </table>
+
+      <details class="tpguide">
+        <summary>如何設定這些參數？（評估標準與資料來源）</summary>
+        <div class="box">
+          <p class="gprin"><b>通用原則：</b>最可能值＝院內近12個月資料的中位數或平均數；最小值／最大值＝近12個月月別資料的第10／第90百分位（排除離群值），而非理論上的極端值。院內若無現成資料，可用文獻回顧或召集感控、護理、財務代表以德菲法（Delphi）取得共識估計，並在敏感度分析中標註為「專家估計」。</p>
+          <dl class="gdl">
+            <dt>隔離天數</dt><dd>定義：病人由隔離開始至解除隔離（如三次培養陰性）之住院天數。來源：感染管制系統或病歷之隔離起訖紀錄。設定：以近12個月個案分布之第10／中位數／第90百分位為最小／最可能／最大。</dd>
+            <dt>佔床率</dt><dd>定義：相關病房（或全院）平均佔床率，用以反映封鎖床位是否真的排擠得到病人。來源：病歷室或醫務部月報表。設定：取近12個月月佔床率之最低／平均／最高（旺季）值；若佔床率長期偏低，機會成本應相應調低。</dd>
+            <dt>每床日淨貢獻</dt><dd>定義：每一床日產生的邊際貢獻（收入減變動成本），非病房牌價或總床費。來源：財務室／成本會計依科別或DRG之邊際貢獻分析。設定：最小取低毛利科別、最可能取相關病房平均、最大取高毛利／高需求科別，反映「若無隔離、此床本可收治何種病人」。</dd>
+            <dt>ICU 延後轉出天數</dt><dd>定義：因病房無空床可轉出、ICU 病人延後轉出之天數。來源：ICU 轉出/等床紀錄。設定：以近期實際延遲天數分布之最小／中位數／最大估計；若院內無轉出延遲問題，最可能值可設為 0 並於敏感度分析中呈現此假設的影響。</dd>
+            <dt>ICU 每床日淨貢獻</dt><dd>定義：ICU 床位之邊際貢獻／機會成本，通常遠高於一般病房。來源：財務室 ICU 成本效益分析，或以重症相關給付與變動成本粗估。設定：反映院內 ICU 實際週轉壓力，週轉率高的醫院應採較高估計。</dd>
+            <dt>每床日 PPE 成本</dt><dd>定義：隔離衣、手套、口罩等防護耗材之每床日用量成本。來源：藥材／耗材採購單價 × 病房實際每日使用量（可由護理站盤點或耗材申請紀錄推算）。設定：依耗材單價波動與使用頻率差異設定上下限。</dd>
+            <dt>每日額外護理時間</dt><dd>定義：因隔離增加之額外護理時間（更衣、額外清消、記錄等），非病人本身護理需求。來源：時間動作研究、護理站訪談或工作量測量系統。設定：若無實測資料，建議以護理長／資深護理師訪談取得共識範圍，並註明為專家估計。</dd>
+          </dl>
+        </div>
+      </details>
     </div>
 
     <div class="group">
