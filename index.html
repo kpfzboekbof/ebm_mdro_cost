@@ -174,7 +174,7 @@
             <dt>CPE/CRE 接觸者採檢人次</dt><dd>定義：依院內「主動篩檢」策略一，KPC/NDM 等 CPE（屬 CRE）帶菌者之接觸者須採檢——同室鄰床病人，若住單人房則篩檢隔壁兩室病人，鄰床/鄰室陽性時再擴大範圍。此為每一新確診 CPE/CRE 個案「觸發」的接觸者採檢人次（含擴大）。來源：感染管制中心之接觸者採檢紀錄。設定：最小＝僅同室鄰床（約1–2人）、最可能＝一般情形、最大＝需擴大篩檢之情形；本模型將此成本歸屬於 CRE 類（豁免 CRE 隔離即可省下此環狀篩檢）。Candida auris 及 VRE 群突發之接觸者篩檢未另建模，屬保守低估。</dd>
             <dt>每次布簾更換成本</dt><dd>定義：政策要求病人出院或轉床後更換「該床及鄰床」圍簾並移除標示。來源：布簾洗滌/更換單價 × 每次片數。設定：以本床＋鄰床圍簾之洗滌或更換成本估計，已與終期消毒合併為同一成本項。</dd>
             <dt>每床日 CHG 藥浴成本</dt><dd>定義：政策針對 VRE/MRSA 高風險單位/病人或群突發時，可執行 2% Chlorhexidine 藥浴以降低散播。來源：CHG 藥浴巾/藥液單價 × 每日次數。設定：以每床日耗材（必要時含執行人力）估計；本模型僅套用於 MRSA+VRE 類人數與其隔離天數，豁免該類即可省下此項。</dd>
-            <dt>每人培養/篩檢次數</dt><dd>定義：個案「本身」之確認與監測培養次數（非接觸者）。政策之解除隔離條件依菌種而異：MRSA 鼻腔拭子 1 次、CRAB/CRPA 痰或咽喉 1 次、VRE/CRE 肛門拭子須連續 3 次（每次間隔≥72 小時）、C. auris 腋窩及鼠蹊 2–3 次。設定：若貴院多數新確診個案於當次住院不解除隔離，此項以確認＋定期監測次數為主；若會嘗試解除隔離，VRE/CRE 應反映 3 次連續陰性之採檢負擔。</dd>
+            <dt>接觸者採檢每人次檢驗單價</dt><dd>定義：接觸者環狀篩檢每一人次之檢驗單價（培養/PCR）。用途：僅供上方「CPE/CRE 接觸者採檢人次」計算接觸者篩檢成本。說明：本工具評估對象為「住院期間新篩出」之個案，一旦篩到即隔離、同次住院不會反覆篩檢，且當次住院通常不解除隔離，故不計個案「本身」的重複監測培養成本；且那次「篩出」之培養無論是否隔離都會執行，本非隔離政策的增量成本。至於解除隔離所需之各菌種採檢（MRSA 1 次、VRE/CRE 連續 3 次等）多發生於後續住院或門診，不列入本次住院成本。</dd>
           </dl>
         </div>
       </details>
@@ -186,8 +186,7 @@
       <div class="field"><label>每次終期消毒成本</label><div class="inbox"><input id="Cclean" type="number" value="1500"><span class="unit">元/次</span></div></div>
       <div class="field"><label>每次布簾更換成本<small>出院/轉床更換本床＋鄰床圍簾</small></label><div class="inbox"><input id="Ccurtain" type="number" value="300"><span class="unit">元/次</span></div></div>
       <div class="field"><label>每床日 CHG 藥浴成本<small>僅 VRE/MRSA 高風險，2% chlorhexidine</small></label><div class="inbox"><input id="Cchg" type="number" value="60"><span class="unit">元/床日</span></div></div>
-      <div class="field"><label>每人培養/篩檢次數<small>個案本身確認/監測，非接觸者</small></label><div class="inbox"><input id="S" type="number" value="4"><span class="unit">次/人</span></div></div>
-      <div class="field"><label>每次檢驗單價</label><div class="inbox"><input id="Clab" type="number" value="500"><span class="unit">元/次</span></div></div>
+      <div class="field"><label>接觸者採檢每人次檢驗單價<small>供 CPE/CRE 接觸者環狀篩檢用；個案本身住院期間不重複篩檢，故不另計</small></label><div class="inbox"><input id="Clab" type="number" value="500"><span class="unit">元/次</span></div></div>
     </div>
 
     <div class="toolbar">
@@ -234,10 +233,11 @@
         <code>床位機會成本 = N × 封鎖床數 × 隔離天數 × 佔床率 × 每床日淨貢獻</code>
         <code>ICU 轉出延遲 = ICU轉出人數 × 延後天數 × ICU每床日淨貢獻</code>
         <code>PPE = N × 隔離天數 × 每床日PPE；人力 = N × 隔離天數 × (額外分鐘/60) × 時薪</code>
-        <code>終期消毒+布簾 = N × (每次消毒 + 每次布簾更換)；檢驗 = N × 次數 × 單價</code>
+        <code>終期消毒+布簾 = N × (每次消毒 + 每次布簾更換)</code>
         <code>接觸者環狀篩檢 = N(CRE) × 接觸者採檢人次 × 檢驗單價（政策主動篩檢策略一）</code>
         <code>CHG 藥浴 = N(MRSA+VRE) × 隔離天數 × 每床日CHG成本</code>
-        <code>總成本 = 八項相加，重複 10,000 次 → 中位數與 2.5%–97.5% 區間</code>
+        <code>個案本身：住院期間新篩出、當次不重複篩檢/不解除隔離，故不計自身監測培養</code>
+        <code>總成本 = 七項相加，重複 10,000 次 → 中位數與 2.5%–97.5% 區間</code>
       </div>
     </details>
   </div>
@@ -279,7 +279,7 @@
     Rbed_lo:2000,Rbed_md:3000,Rbed_hi:4500,Dicu_lo:0.5,Dicu_md:1.5,Dicu_hi:3,
     Ricu_lo:10000,Ricu_md:15000,Ricu_hi:22000,Cppe_lo:150,Cppe_md:250,Cppe_hi:400,
     T_lo:15,T_md:30,T_hi:50,RC_lo:2,RC_md:5,RC_hi:12,
-    W:400,Cclean:1500,Ccurtain:300,Cchg:60,S:4,Clab:500};
+    W:400,Cclean:1500,Ccurtain:300,Cchg:60,Clab:500};
 
   const items=[
     {key:"ward",name:"床位機會成本",color:"var(--c1)"},
@@ -287,7 +287,6 @@
     {key:"ppe",name:"防護耗材 PPE",color:"var(--c3)"},
     {key:"labor",name:"額外護理人力",color:"var(--c4)"},
     {key:"clean",name:"環境終期消毒＋布簾更換",color:"var(--c5)"},
-    {key:"lab",name:"監測培養篩檢",color:"var(--c6)"},
     {key:"screen",name:"CPE/CRE 接觸者環狀篩檢",color:"#059669"},
     {key:"chg",name:"VRE/MRSA CHG 藥浴",color:"#db2777"},
   ];
@@ -315,7 +314,7 @@
       Rbed:[v("Rbed_lo"),v("Rbed_md"),v("Rbed_hi")],Dicu:[v("Dicu_lo"),v("Dicu_md"),v("Dicu_hi")],
       Ricu:[v("Ricu_lo"),v("Ricu_md"),v("Ricu_hi")],Cppe:[v("Cppe_lo"),v("Cppe_md"),v("Cppe_hi")],
       T:[v("T_lo"),v("T_md"),v("T_hi")],RC:[v("RC_lo"),v("RC_md"),v("RC_hi")],
-      W:v("W"),Cclean:v("Cclean"),Ccurtain:v("Ccurtain"),Cchg:v("Cchg"),S:v("S"),Clab:v("Clab")};
+      W:v("W"),Cclean:v("Cclean"),Ccurtain:v("Ccurtain"),Cchg:v("Cchg"),Clab:v("Clab")};
   }
 
   // deterministic total given scalar values (for tornado)
@@ -325,10 +324,9 @@
     const ppe=P.N*x.D*x.Cppe;
     const labor=P.N*x.D*(x.T/60)*P.W;
     const clean=P.N*(P.Cclean+P.Ccurtain);           // 終期消毒＋出院/轉床布簾更換（本床＋鄰床）
-    const lab=P.N*P.S*P.Clab;                          // 個案本身之確認/監測培養
     const screen=(P.catN.cre||0)*x.RC*P.Clab;          // CPE/CRE 接觸者環狀篩檢（主動篩檢策略一）
     const chg=(P.catN.mrsa_vre||0)*x.D*P.Cchg;         // VRE/MRSA 高風險 2% CHG 藥浴
-    return {ward,icu,ppe,labor,clean,lab,screen,chg,total:ward+icu+ppe+labor+clean+lab+screen+chg};
+    return {ward,icu,ppe,labor,clean,screen,chg,total:ward+icu+ppe+labor+clean+screen+chg};
   }
   function modeVals(P){return {B:P.Bexp,D:P.D[1],OCC:P.OCC[1],Rbed:P.Rbed[1],Dicu:P.Dicu[1],Ricu:P.Ricu[1],Cppe:P.Cppe[1],T:P.T[1],RC:P.RC[1]};}
 
@@ -340,7 +338,7 @@
     document.getElementById("ntotal").textContent="合計年帶菌住院病人數："+P.N.toLocaleString("en-US")+" 人/年";
     const ITER=10000;
     const totals=new Float64Array(ITER);
-    const sum={ward:0,icu:0,ppe:0,labor:0,clean:0,lab:0,screen:0,chg:0};
+    const sum={ward:0,icu:0,ppe:0,labor:0,clean:0,screen:0,chg:0};
     const sdB=P.N>0?Math.sqrt(Math.max(P.Evar,0)/P.N):0;
     for(let i=0;i<ITER;i++){
       let B=P.Bexp+sdB*randn(); if(B<0)B=0; // cohort mean blocked beds (aleatory room-type)
@@ -350,7 +348,7 @@
         T:tri(P.T[0],P.T[1],P.T[2]),RC:tri(P.RC[0],P.RC[1],P.RC[2])};
       const r=calc(P,x);
       totals[i]=r.total;
-      sum.ward+=r.ward;sum.icu+=r.icu;sum.ppe+=r.ppe;sum.labor+=r.labor;sum.clean+=r.clean;sum.lab+=r.lab;sum.screen+=r.screen;sum.chg+=r.chg;
+      sum.ward+=r.ward;sum.icu+=r.icu;sum.ppe+=r.ppe;sum.labor+=r.labor;sum.clean+=r.clean;sum.screen+=r.screen;sum.chg+=r.chg;
     }
     const arr=Array.from(totals).sort((a,b)=>a-b);
     const median=pct(arr,.5),lo=pct(arr,.025),hi=pct(arr,.975);
@@ -419,7 +417,7 @@
   }
 
   // 豁免某菌種之節省 = 共通成本（每人平均，隨人數等比）+ 該菌種專屬成本
-  //   共通（依人數等比）：床位機會、PPE、人力、終期消毒+布簾、基本培養
+  //   共通（依人數等比）：床位機會、PPE、人力、終期消毒+布簾
   //   專屬：CPE/CRE 接觸者環狀篩檢 → 僅 CRE；VRE/MRSA CHG 藥浴 → 僅 MRSA+VRE
   //   ICU 轉出延遲未依菌種拆分，不隨豁免變動。
   function catSaving(c,P,perPatient,meanCat){
@@ -429,7 +427,7 @@
     return s;
   }
   function renderExempt(P,meanCat,mean){
-    const sharedMean=meanCat.ward+meanCat.ppe+meanCat.labor+meanCat.clean+meanCat.lab; // 依人數等比之共通成本
+    const sharedMean=meanCat.ward+meanCat.ppe+meanCat.labor+meanCat.clean; // 依人數等比之共通成本
     const perPatient=P.N>0?sharedMean/P.N:0;
     let listHtml="";
     CATS.forEach(c=>{
