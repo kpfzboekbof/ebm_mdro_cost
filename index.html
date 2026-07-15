@@ -98,7 +98,7 @@
 <body>
 <header>
   <h1>住院病人抗藥菌（MDRO）隔離政策 — 機率敏感度分析（PSA）成本試算</h1>
-  <p>研究問題：病人住院期間新篩出抗藥菌帶菌，是否執行隔離政策？（不含入院時即已知帶菌者）成本本質上是機率性的：同一位帶菌病人可能被安置到單、雙、三人房，封鎖床數與成本不同。本工具用蒙地卡羅模擬（10,000 次）處理不確定性，輸出「基準值＋95% 區間」，並以 tornado 圖顯示哪個參數主導不確定性。房型以機率建模；關鍵參數用最小／最可能／最大三點估計。</p>
+  <p>研究問題：病人住院期間新篩出抗藥菌帶菌，是否執行隔離政策？（不含入院時即已知帶菌者）成本本質上是機率性的：同一位帶菌病人可能被安置到單、雙、三人房，封鎖床數與成本不同。本工具用蒙地卡羅模擬（10,000 次）處理不確定性，輸出「基準值＋95% 區間」，並以 tornado 圖顯示哪個參數主導不確定性。房型以機率建模；關鍵參數用最小／最可能／最大三點估計。並計入病人因隔離被安置於單/雙人房時、依院內政策免收之自付差額病床費（醫院原可向自費病人收取、隔離時被減免的收入）。</p>
 </header>
 
 <div class="wrap">
@@ -133,6 +133,26 @@
       <div class="field"><label>三人房機率<small>封鎖 2 床</small></label>
         <div class="inbox"><input id="pT" type="number" min="0" value="25"><span class="unit">%</span></div></div>
       <div class="roomcalc" id="roomcalc">期望封鎖床數：—</div>
+    </div>
+
+    <div class="group">
+      <h3><span class="swatch" style="background:#d97706"></span>院內床位配置與自付差額病床費</h3>
+      <p class="hint" style="margin:-4px 0 8px">依院內政策，病人因隔離之故須住到隔離房（單/雙人房）時免收自付差額。此差額原為醫院可向自費占用該床病人收取的收入，因隔離被減免，構成隔離政策的機會成本。三人房不收自付差額。床數供房型分配之參考（全院一般病房共 <span id="bedGenSum">550</span> 床）。</p>
+      <div class="field"><label>單人房床數<small>自付差額病床</small></label>
+        <div class="inbox"><input id="Bed_S" type="number" min="0" value="55"><span class="unit">床</span></div></div>
+      <div class="field"><label>單人房每日自付差額<small>隔離時減免之收入</small></label>
+        <div class="inbox"><input id="Rs" type="number" min="0" value="3000"><span class="unit">元/日</span></div></div>
+      <div class="field"><label>雙人房床數<small>自付差額病床</small></label>
+        <div class="inbox"><input id="Bed_D" type="number" min="0" value="112"><span class="unit">床</span></div></div>
+      <div class="field"><label>雙人房每日自付差額<small>隔離時減免之收入</small></label>
+        <div class="inbox"><input id="Rd" type="number" min="0" value="1200"><span class="unit">元/日</span></div></div>
+      <div class="field"><label>三人房床數<small>不收自付差額</small></label>
+        <div class="inbox"><input id="Bed_T" type="number" min="0" value="383"><span class="unit">床</span></div></div>
+      <div class="field"><label>ICU 床數</label>
+        <div class="inbox"><input id="Bed_ICU" type="number" min="0" value="47"><span class="unit">床</span></div></div>
+      <div class="field"><label>RCC 床數<small>呼吸照護中心（未另建模）</small></label>
+        <div class="inbox"><input id="Bed_RCC" type="number" min="0" value="12"><span class="unit">床</span></div></div>
+      <div class="roomcalc" id="selfpaycalc">自付差額減免（每人平均）：—</div>
     </div>
 
     <div class="group">
@@ -236,8 +256,10 @@
         <code>終期消毒+布簾 = N × (每次消毒 + 每次布簾更換)</code>
         <code>接觸者環狀篩檢 = N(CRE) × 接觸者採檢人次 × 檢驗單價（政策主動篩檢策略一）</code>
         <code>CHG 藥浴 = N(MRSA+VRE) × 隔離天數 × 每床日CHG成本</code>
+        <code>自付差額減免 = N × 隔離天數 × 佔床率 × (單人房機率×單人房差額 + 雙人房機率×雙人房差額)</code>
+        <code>　（政策：因隔離入住單/雙人房免收自付差額，等同醫院損失原可收之差額病床收入；三人房差額為 0）</code>
         <code>個案本身：住院期間新篩出、當次不重複篩檢/不解除隔離，故不計自身監測培養</code>
-        <code>總成本 = 七項相加，重複 10,000 次 → 中位數與 2.5%–97.5% 區間</code>
+        <code>總成本 = 八項相加，重複 10,000 次 → 中位數與 2.5%–97.5% 區間</code>
       </div>
     </details>
   </div>
@@ -279,7 +301,8 @@
     Rbed_lo:2000,Rbed_md:3000,Rbed_hi:4500,Dicu_lo:0.5,Dicu_md:1.5,Dicu_hi:3,
     Ricu_lo:10000,Ricu_md:15000,Ricu_hi:22000,Cppe_lo:150,Cppe_md:250,Cppe_hi:400,
     T_lo:15,T_md:30,T_hi:50,RC_lo:2,RC_md:5,RC_hi:12,
-    W:400,Cclean:1500,Ccurtain:300,Cchg:60,Clab:500};
+    W:400,Cclean:1500,Ccurtain:300,Cchg:60,Clab:500,
+    Bed_S:55,Rs:3000,Bed_D:112,Rd:1200,Bed_T:383,Bed_ICU:47,Bed_RCC:12};
 
   const items=[
     {key:"ward",name:"床位機會成本",color:"var(--c1)"},
@@ -289,6 +312,7 @@
     {key:"clean",name:"環境終期消毒＋布簾更換",color:"var(--c5)"},
     {key:"screen",name:"CPE/CRE 接觸者環狀篩檢",color:"#059669"},
     {key:"chg",name:"VRE/MRSA CHG 藥浴",color:"#db2777"},
+    {key:"selfpay",name:"單/雙人房自付差額減免",color:"#d97706"},
   ];
 
   // triangular sample
@@ -314,7 +338,9 @@
       Rbed:[v("Rbed_lo"),v("Rbed_md"),v("Rbed_hi")],Dicu:[v("Dicu_lo"),v("Dicu_md"),v("Dicu_hi")],
       Ricu:[v("Ricu_lo"),v("Ricu_md"),v("Ricu_hi")],Cppe:[v("Cppe_lo"),v("Cppe_md"),v("Cppe_hi")],
       T:[v("T_lo"),v("T_md"),v("T_hi")],RC:[v("RC_lo"),v("RC_md"),v("RC_hi")],
-      W:v("W"),Cclean:v("Cclean"),Ccurtain:v("Ccurtain"),Cchg:v("Cchg"),Clab:v("Clab")};
+      W:v("W"),Cclean:v("Cclean"),Ccurtain:v("Ccurtain"),Cchg:v("Cchg"),Clab:v("Clab"),
+      Rs:v("Rs"),Rd:v("Rd"),
+      bedS:v("Bed_S"),bedD:v("Bed_D"),bedT:v("Bed_T"),bedICU:v("Bed_ICU"),bedRCC:v("Bed_RCC")};
   }
 
   // deterministic total given scalar values (for tornado)
@@ -326,7 +352,9 @@
     const clean=P.N*(P.Cclean+P.Ccurtain);           // 終期消毒＋出院/轉床布簾更換（本床＋鄰床）
     const screen=(P.catN.cre||0)*x.RC*P.Clab;          // CPE/CRE 接觸者環狀篩檢（主動篩檢策略一）
     const chg=(P.catN.mrsa_vre||0)*x.D*P.Cchg;         // VRE/MRSA 高風險 2% CHG 藥浴
-    return {ward,icu,ppe,labor,clean,screen,chg,total:ward+icu+ppe+labor+clean+screen+chg};
+    // 隔離病人被安置於單/雙人房，依政策免收自付差額；以佔床率反映該床原本是否會有自費病人占用
+    const selfpay=P.N*x.D*(x.OCC/100)*(P.pS*P.Rs+P.pD*P.Rd);
+    return {ward,icu,ppe,labor,clean,screen,chg,selfpay,total:ward+icu+ppe+labor+clean+screen+chg+selfpay};
   }
   function modeVals(P){return {B:P.Bexp,D:P.D[1],OCC:P.OCC[1],Rbed:P.Rbed[1],Dicu:P.Dicu[1],Ricu:P.Ricu[1],Cppe:P.Cppe[1],T:P.T[1],RC:P.RC[1]};}
 
@@ -336,9 +364,12 @@
     const P=readParams();
     document.getElementById("roomcalc").textContent="期望封鎖床數："+P.Bexp.toFixed(2)+" 床/人（單"+Math.round(P.pS*100)+"% 雙"+Math.round(P.pD*100)+"% 三"+Math.round(P.pT*100)+"%）";
     document.getElementById("ntotal").textContent="合計年帶菌住院病人數："+P.N.toLocaleString("en-US")+" 人/年";
+    document.getElementById("bedGenSum").textContent=(P.bedS+P.bedD+P.bedT).toLocaleString("en-US");
+    const spPer=P.D[1]*(P.OCC[1]/100)*(P.pS*P.Rs+P.pD*P.Rd);
+    document.getElementById("selfpaycalc").textContent="自付差額減免（每人平均）：約 "+nf(spPer)+"／人（單人房 "+nf(P.Rs)+"／日、雙人房 "+nf(P.Rd)+"／日，依房型機率與佔床率加權 × 隔離天數）";
     const ITER=10000;
     const totals=new Float64Array(ITER);
-    const sum={ward:0,icu:0,ppe:0,labor:0,clean:0,screen:0,chg:0};
+    const sum={ward:0,icu:0,ppe:0,labor:0,clean:0,screen:0,chg:0,selfpay:0};
     const sdB=P.N>0?Math.sqrt(Math.max(P.Evar,0)/P.N):0;
     for(let i=0;i<ITER;i++){
       let B=P.Bexp+sdB*randn(); if(B<0)B=0; // cohort mean blocked beds (aleatory room-type)
@@ -348,7 +379,7 @@
         T:tri(P.T[0],P.T[1],P.T[2]),RC:tri(P.RC[0],P.RC[1],P.RC[2])};
       const r=calc(P,x);
       totals[i]=r.total;
-      sum.ward+=r.ward;sum.icu+=r.icu;sum.ppe+=r.ppe;sum.labor+=r.labor;sum.clean+=r.clean;sum.screen+=r.screen;sum.chg+=r.chg;
+      sum.ward+=r.ward;sum.icu+=r.icu;sum.ppe+=r.ppe;sum.labor+=r.labor;sum.clean+=r.clean;sum.screen+=r.screen;sum.chg+=r.chg;sum.selfpay+=r.selfpay;
     }
     const arr=Array.from(totals).sort((a,b)=>a-b);
     const median=pct(arr,.5),lo=pct(arr,.025),hi=pct(arr,.975);
@@ -417,7 +448,7 @@
   }
 
   // 豁免某菌種之節省 = 共通成本（每人平均，隨人數等比）+ 該菌種專屬成本
-  //   共通（依人數等比）：床位機會、PPE、人力、終期消毒+布簾
+  //   共通（依人數等比）：床位機會、PPE、人力、終期消毒+布簾、自付差額減免
   //   專屬：CPE/CRE 接觸者環狀篩檢 → 僅 CRE；VRE/MRSA CHG 藥浴 → 僅 MRSA+VRE
   //   ICU 轉出延遲未依菌種拆分，不隨豁免變動。
   function catSaving(c,P,perPatient,meanCat){
@@ -427,7 +458,7 @@
     return s;
   }
   function renderExempt(P,meanCat,mean){
-    const sharedMean=meanCat.ward+meanCat.ppe+meanCat.labor+meanCat.clean; // 依人數等比之共通成本
+    const sharedMean=meanCat.ward+meanCat.ppe+meanCat.labor+meanCat.clean+meanCat.selfpay; // 依人數等比之共通成本
     const perPatient=P.N>0?sharedMean/P.N:0;
     let listHtml="";
     CATS.forEach(c=>{
@@ -443,7 +474,7 @@
     const adj=mean-totalSaving;
     document.getElementById("exemptAdjTotal").textContent=nf(adj);
     document.getElementById("exemptSavings").textContent=nf(totalSaving)+(mean>0?"（"+(totalSaving/mean*100).toFixed(1)+"%）":"");
-    document.getElementById("exemptSubline").textContent="共通成本以每人平均（"+nf(perPatient)+"／人）×該菌種人數估算，另加該菌種專屬成本（CRE 之接觸者環狀篩檢、MRSA+VRE 之 CHG 藥浴）；ICU 轉出延遲未依菌種拆分，不隨勾選變動。";
+    document.getElementById("exemptSubline").textContent="共通成本（含床位機會、PPE、人力、清消布簾、單/雙人房自付差額減免）以每人平均（"+nf(perPatient)+"／人）×該菌種人數估算，另加該菌種專屬成本（CRE 之接觸者環狀篩檢、MRSA+VRE 之 CHG 藥浴）；ICU 轉出延遲未依菌種拆分，不隨勾選變動。";
   }
   function onExemptToggle(key){exemptState[key]=document.getElementById("ex_"+key).checked;run();}
 
