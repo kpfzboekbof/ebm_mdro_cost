@@ -112,7 +112,7 @@
       <p class="hint" style="margin:-4px 0 8px">不同菌種之隔離政策、篩檢與清消規範可能不同，故年帶菌住院病人數依菌種分開輸入；四項合計即為模型使用之年帶菌住院人數。</p>
       <div class="field"><label>MRSA + VRE<small>一年內「住院期間新篩出」人數（不含入院時已知帶菌者）</small></label>
         <div class="inbox"><input id="N_mrsa_vre" type="number" min="0" value="150"><span class="unit">人/年</span></div></div>
-      <div class="field"><label>CRE<small>碳青黴烯類抗藥腸桿菌</small></label>
+      <div class="field"><label>CRE / CRO<small>碳青黴烯類抗藥革蘭氏陰性菌（含 CRE、CRAB／MDRAB、CRPA）</small></label>
         <div class="inbox"><input id="N_cre" type="number" min="0" value="70"><span class="unit">人/年</span></div></div>
       <div class="field"><label>ESBL<small>廣效性乙內醯胺酶腸桿菌</small></label>
         <div class="inbox"><input id="N_esbl" type="number" min="0" value="50"><span class="unit">人/年</span></div></div>
@@ -294,7 +294,7 @@
 
   const CATS=[
     {key:"mrsa_vre",name:"MRSA + VRE"},
-    {key:"cre",name:"CRE（碳青黴烯抗藥腸桿菌）"},
+    {key:"cre",name:"CRE / CRO（碳青黴烯類抗藥革蘭氏陰性菌，含 CRAB／MDRAB、CRPA）"},
     {key:"esbl",name:"ESBL（廣效性乙內醯胺酶腸桿菌）"},
     {key:"cdiff",name:"C. diff（困難梭菌）"},
   ];
