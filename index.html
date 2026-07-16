@@ -112,7 +112,7 @@
       <p class="hint" style="margin:-4px 0 8px">不同菌種之隔離政策、篩檢與清消規範可能不同，故年帶菌住院病人數依菌種分開輸入；四項合計即為模型使用之年帶菌住院人數。</p>
       <div class="field"><label>MRSA + VRE<small>一年內「住院期間新篩出」人數（不含入院時已知帶菌者）</small></label>
         <div class="inbox"><input id="N_mrsa_vre" type="number" min="0" value="150"><span class="unit">人/年</span></div></div>
-      <div class="field"><label>CRE<small>碳青黴烯類抗藥腸桿菌</small></label>
+      <div class="field"><label>CRE / CRO<small>碳青黴烯類抗藥革蘭氏陰性菌（含 CRE、CRAB／MDRAB、CRPA）</small></label>
         <div class="inbox"><input id="N_cre" type="number" min="0" value="70"><span class="unit">人/年</span></div></div>
       <div class="field"><label>ESBL<small>廣效性乙內醯胺酶腸桿菌</small></label>
         <div class="inbox"><input id="N_esbl" type="number" min="0" value="50"><span class="unit">人/年</span></div></div>
@@ -211,6 +211,7 @@
       <div class="field"><label>每次布簾更換成本<small>出院/轉床更換本床＋鄰床圍簾</small></label><div class="inbox"><input id="Ccurtain" type="number" value="300"><span class="unit">元/次</span></div></div>
       <div class="field"><label>每床日 CHG 藥浴成本<small>僅 VRE/MRSA 高風險，2% chlorhexidine</small></label><div class="inbox"><input id="Cchg" type="number" value="60"><span class="unit">元/床日</span></div></div>
       <div class="field"><label>接觸者採檢每人次檢驗單價<small>供 CPE/CRE 接觸者環狀篩檢用；個案本身住院期間不重複篩檢，故不另計</small></label><div class="inbox"><input id="Clab" type="number" value="500"><span class="unit">元/次</span></div></div>
+      <div class="field"><label>CRE/CRO 中屬 CPE/CRE（腸桿菌）比例<small>僅此比例之個案觸發接觸者環狀篩檢；CRAB／MDRAB、CRPA 不計環狀篩檢（依院內策略一，環狀篩檢由 KPC/NDM 等 CPE 觸發）</small></label><div class="inbox"><input id="pCPE" type="number" min="0" max="100" value="60"><span class="unit">%</span></div></div>
     </div>
 
     <div class="toolbar">
@@ -258,7 +259,7 @@
         <code>ICU 轉出延遲 = ICU轉出人數 × 延後天數 × ICU每床日淨貢獻</code>
         <code>PPE = N × 隔離天數 × 每床日PPE；人力 = N × 隔離天數 × (額外分鐘/60) × 時薪</code>
         <code>終期消毒+布簾 = N × (每次消毒 + 每次布簾更換)</code>
-        <code>接觸者環狀篩檢 = N(CRE) × 接觸者採檢人次 × 檢驗單價（政策主動篩檢策略一）</code>
+        <code>接觸者環狀篩檢 = N(CRE/CRO) × CPE/CRE腸桿菌比例 × 接觸者採檢人次 × 檢驗單價（策略一，僅CPE觸發；CRAB/CRPA不計）</code>
         <code>CHG 藥浴 = N(MRSA+VRE) × 隔離天數 × 每床日CHG成本</code>
         <code>自付差額減免 = N × 隔離天數 × 佔床率 × (單人房機率×單人房差額 + 雙人房機率×雙人房差額)</code>
         <code>　（政策：因隔離入住單/雙人房免收自付差額，等同醫院損失原可收之差額病床收入；三人房差額為 0）</code>
@@ -294,7 +295,7 @@
 
   const CATS=[
     {key:"mrsa_vre",name:"MRSA + VRE"},
-    {key:"cre",name:"CRE（碳青黴烯抗藥腸桿菌）"},
+    {key:"cre",name:"CRE / CRO（碳青黴烯類抗藥革蘭氏陰性菌，含 CRAB／MDRAB、CRPA）"},
     {key:"esbl",name:"ESBL（廣效性乙內醯胺酶腸桿菌）"},
     {key:"cdiff",name:"C. diff（困難梭菌）"},
   ];
@@ -305,7 +306,7 @@
     Rbed_lo:2000,Rbed_md:3000,Rbed_hi:4500,Dicu_lo:0.5,Dicu_md:1.5,Dicu_hi:3,
     Ricu_lo:10000,Ricu_md:15000,Ricu_hi:22000,Cppe_lo:150,Cppe_md:250,Cppe_hi:400,
     T_lo:15,T_md:30,T_hi:50,RC_lo:2,RC_md:5,RC_hi:12,
-    W:400,Cclean:1500,Ccurtain:300,Cchg:60,Clab:500,
+    W:400,Cclean:1500,Ccurtain:300,Cchg:60,Clab:500,pCPE:60,
     Bed_S:55,Rs:3000,Bed_D:112,Rd:1200,Bed_T:383,Bed_ICU:47,Bed_RCC:12};
 
   const items=[
@@ -342,7 +343,7 @@
       Rbed:[v("Rbed_lo"),v("Rbed_md"),v("Rbed_hi")],Dicu:[v("Dicu_lo"),v("Dicu_md"),v("Dicu_hi")],
       Ricu:[v("Ricu_lo"),v("Ricu_md"),v("Ricu_hi")],Cppe:[v("Cppe_lo"),v("Cppe_md"),v("Cppe_hi")],
       T:[v("T_lo"),v("T_md"),v("T_hi")],RC:[v("RC_lo"),v("RC_md"),v("RC_hi")],
-      W:v("W"),Cclean:v("Cclean"),Ccurtain:v("Ccurtain"),Cchg:v("Cchg"),Clab:v("Clab"),
+      W:v("W"),Cclean:v("Cclean"),Ccurtain:v("Ccurtain"),Cchg:v("Cchg"),Clab:v("Clab"),pCPE:v("pCPE"),
       Rs:v("Rs"),Rd:v("Rd"),
       bedS:v("Bed_S"),bedD:v("Bed_D"),bedT:v("Bed_T"),bedICU:v("Bed_ICU"),bedRCC:v("Bed_RCC")};
   }
@@ -354,7 +355,7 @@
     const ppe=P.N*x.D*x.Cppe;
     const labor=P.N*x.D*(x.T/60)*P.W;
     const clean=P.N*(P.Cclean+P.Ccurtain);           // 終期消毒＋出院/轉床布簾更換（本床＋鄰床）
-    const screen=(P.catN.cre||0)*x.RC*P.Clab;          // CPE/CRE 接觸者環狀篩檢（主動篩檢策略一）
+    const screen=(P.catN.cre||0)*(P.pCPE/100)*x.RC*P.Clab; // 僅 CRE/CRO 中屬 CPE/CRE（腸桿菌）者觸發接觸者環狀篩檢；CRAB/CRPA 不計
     const chg=(P.catN.mrsa_vre||0)*x.D*P.Cchg;         // VRE/MRSA 高風險 2% CHG 藥浴
     // 隔離病人被安置於單/雙人房，依政策免收自付差額；以佔床率反映該床原本是否會有自費病人占用
     const selfpay=P.N*x.D*(x.OCC/100)*(P.pS*P.Rs+P.pD*P.Rd);
