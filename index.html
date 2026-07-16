@@ -109,15 +109,15 @@
 
     <div class="group">
       <h3>病人數與流量（依菌種分類）</h3>
-      <p class="hint" style="margin:-4px 0 8px">不同菌種之隔離政策、篩檢與清消規範可能不同，故年帶菌住院病人數依菌種分開輸入；四項合計即為模型使用之年帶菌住院人數。</p>
-      <div class="field"><label>MRSA + VRE<small>一年內「住院期間新篩出」人數（不含入院時已知帶菌者）</small></label>
-        <div class="inbox"><input id="N_mrsa_vre" type="number" min="0" value="150"><span class="unit">人/年</span></div></div>
-      <div class="field"><label>CRE / CRO<small>碳青黴烯類抗藥革蘭氏陰性菌（含 CRE、CRAB／MDRAB、CRPA）</small></label>
-        <div class="inbox"><input id="N_cre" type="number" min="0" value="70"><span class="unit">人/年</span></div></div>
-      <div class="field"><label>ESBL<small>廣效性乙內醯胺酶腸桿菌</small></label>
-        <div class="inbox"><input id="N_esbl" type="number" min="0" value="50"><span class="unit">人/年</span></div></div>
-      <div class="field"><label>C. diff<small>困難梭菌</small></label>
-        <div class="inbox"><input id="N_cdiff" type="number" min="0" value="30"><span class="unit">人/年</span></div></div>
+      <p class="hint" style="margin:-4px 0 8px">不同菌種之隔離政策、篩檢與清消規範可能不同，故年帶菌住院病人數依菌種分開輸入；四項合計即為模型使用之年帶菌住院人數。<b>預設值＝新竹醫院 2022–2025 年「住院期間新篩出」去重病人數之年平均</b>（依隔離醫囑分類：MRSA+VRE 17、CRE/CRO 15、C. diff 5；ESBL 因此資料集無標記暫設 0，取得資料後請補入）。註：2025 年明顯偏高（MRSA+VRE 23、CRE/CRO 29），若採近年趨勢可上調。</p>
+      <div class="field"><label>MRSA + VRE<small>一年內「住院期間新篩出」人數（不含入院時已知帶菌者）·新竹 2022–2025 均值</small></label>
+        <div class="inbox"><input id="N_mrsa_vre" type="number" min="0" value="17"><span class="unit">人/年</span></div></div>
+      <div class="field"><label>CRE / CRO<small>碳青黴烯類抗藥革蘭氏陰性菌（含 CRE、CRAB／MDRAB、CRPA）·新竹 2022–2025 均值</small></label>
+        <div class="inbox"><input id="N_cre" type="number" min="0" value="15"><span class="unit">人/年</span></div></div>
+      <div class="field"><label>ESBL<small>廣效性乙內醯胺酶腸桿菌 · 本資料集未標記，需另補</small></label>
+        <div class="inbox"><input id="N_esbl" type="number" min="0" value="0"><span class="unit">人/年</span></div></div>
+      <div class="field"><label>C. diff<small>困難梭菌 · 新竹 2022–2025 均值</small></label>
+        <div class="inbox"><input id="N_cdiff" type="number" min="0" value="5"><span class="unit">人/年</span></div></div>
       <div class="roomcalc" id="ntotal">合計年帶菌住院病人數：—</div>
       <div class="field" style="margin-top:9px"><label>ICU 帶菌轉出人數<small>ICU 帶菌轉出普通病房、須隔離床者（未依菌種拆分）</small></label>
         <div class="inbox"><input id="Nicu" type="number" min="0" value="50"><span class="unit">人/年</span></div></div>
@@ -305,7 +305,7 @@
   ];
   const exemptState={mrsa_vre:false,cre:false,esbl:false,cdiff:false};
 
-  const defaults={N_mrsa_vre:150,N_cre:70,N_esbl:50,N_cdiff:30,Nicu:50,pS:30,pD:45,pT:25,
+  const defaults={N_mrsa_vre:17,N_cre:15,N_esbl:0,N_cdiff:5,Nicu:50,pS:30,pD:45,pT:25,
     D_lo:6,D_md:10,D_hi:18,OCC_lo:75,OCC_md:85,OCC_hi:95,
     Rbed_lo:2000,Rbed_md:3000,Rbed_hi:4500,Dicu_lo:0.5,Dicu_md:1.5,Dicu_hi:3,
     Ricu_lo:10000,Ricu_md:15000,Ricu_hi:22000,Cppe_lo:160,Cppe_md:325,Cppe_hi:540,
