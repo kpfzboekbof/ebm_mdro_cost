@@ -126,6 +126,10 @@
     <div class="group">
       <h3><span class="swatch" style="background:var(--c1)"></span>房型分配機率子模型</h3>
       <p class="hint" style="margin:-4px 0 8px">帶菌病人被安置到各房型的機率（自動正規化）。封鎖床數＝房型床數−1：單人房 0、雙人房 1、三人房 2。</p>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12.5px;margin:-2px 0 12px;cursor:pointer">
+        <input type="checkbox" id="autoRoom" checked onchange="run()" style="width:auto;margin-top:2px">
+        <span>依總床數自動計算房型分配機率<small style="display:block;color:var(--muted);font-size:11px;line-height:1.35;margin-top:1px">勾選時機率＝各房型床數 ÷ 一般病房總床數（適用「住院中新篩出、多留在原床」之情境），並鎖定下方三欄；若院內會主動將隔離病人移至單人房，請取消勾選改為手動輸入。</small></span>
+      </label>
       <div class="field"><label>單人房機率<small>封鎖 0 床</small></label>
         <div class="inbox"><input id="pS" type="number" min="0" value="30"><span class="unit">%</span></div></div>
       <div class="field"><label>雙人房機率<small>封鎖 1 床</small></label>
@@ -360,9 +364,25 @@
 
   function pct(sorted,p){const i=Math.min(sorted.length-1,Math.max(0,Math.round(p*(sorted.length-1))));return sorted[i];}
 
+  // 依總床數自動帶入房型分配機率（單/雙/三人房床數比例），並鎖定手動欄位
+  function syncAutoRoom(){
+    const auto=document.getElementById("autoRoom").checked;
+    ["pS","pD","pT"].forEach(id=>{const el=document.getElementById(id);el.disabled=auto;el.style.opacity=auto?.5:1;el.style.cursor=auto?"not-allowed":"";});
+    if(auto){
+      const s=v("Bed_S"),d=v("Bed_D"),t=v("Bed_T"),tot=s+d+t;
+      if(tot>0){
+        document.getElementById("pS").value=+(s/tot*100).toFixed(1);
+        document.getElementById("pD").value=+(d/tot*100).toFixed(1);
+        document.getElementById("pT").value=+(t/tot*100).toFixed(1);
+      }
+    }
+  }
+
   function run(){
+    syncAutoRoom();
     const P=readParams();
-    document.getElementById("roomcalc").textContent="期望封鎖床數："+P.Bexp.toFixed(2)+" 床/人（單"+Math.round(P.pS*100)+"% 雙"+Math.round(P.pD*100)+"% 三"+Math.round(P.pT*100)+"%）";
+    const roomSrc=document.getElementById("autoRoom").checked?"（依總床數自動）":"（手動輸入）";
+    document.getElementById("roomcalc").textContent="期望封鎖床數："+P.Bexp.toFixed(2)+" 床/人（單"+Math.round(P.pS*100)+"% 雙"+Math.round(P.pD*100)+"% 三"+Math.round(P.pT*100)+"%）"+roomSrc;
     document.getElementById("ntotal").textContent="合計年帶菌住院病人數："+P.N.toLocaleString("en-US")+" 人/年";
     document.getElementById("bedGenSum").textContent=(P.bedS+P.bedD+P.bedT).toLocaleString("en-US");
     const spPer=P.D[1]*(P.OCC[1]/100)*(P.pS*P.Rs+P.pD*P.Rd);
@@ -479,7 +499,7 @@
   function onExemptToggle(key){exemptState[key]=document.getElementById("ex_"+key).checked;run();}
 
   const allIds=Object.keys(defaults);
-  function resetAll(){allIds.forEach(id=>document.getElementById(id).value=defaults[id]);CATS.forEach(c=>exemptState[c.key]=false);run();}
+  function resetAll(){allIds.forEach(id=>document.getElementById(id).value=defaults[id]);document.getElementById("autoRoom").checked=true;CATS.forEach(c=>exemptState[c.key]=false);run();}
   let deb;allIds.forEach(id=>document.getElementById(id).addEventListener("input",()=>{clearTimeout(deb);deb=setTimeout(run,180);}));
   run();
 </script>
